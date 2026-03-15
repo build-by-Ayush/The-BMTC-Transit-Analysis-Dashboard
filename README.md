@@ -4,15 +4,13 @@ An end-to-end geospatial and business intelligence analysis of the Bengaluru Met
 
 ## 📸 Dashboard Previews
 
-*(Replace the dummy links below with the actual paths to your uploaded images in the repo)*
-
 ![Stops Dashboard View](Images/Stops.png)
 *Figure 1: The Stops Dashboard providing a macro-level view of network health, accessibility scores, and critical stops.*
 
-![Routes Dashboard View 1](Images/Routes_1.png)
+![Routes Dashboard View 1](Images/Routes 1.png)
 *Figure 2: The Routes Dashboard featuring interactive mapping, dynamic route insights, and stops sequence tables.*
 
-![Routes Dashboard View 2](Images/Routes_2.png)
+![Routes Dashboard View 2](Images/Routes 2.png)
 *Figure 3: The Routes Dashboard featuring interactive mapping, dynamic route insights, and the Top 10 analysis tables.*
 
 ---
