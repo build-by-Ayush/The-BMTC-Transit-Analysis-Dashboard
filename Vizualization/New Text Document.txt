@@ -1,0 +1,530 @@
+You’re designing a **multi-state interactive report**, not just a simple dashboard. So the solution must be structured properly — otherwise bookmarks will start fighting each other.
+
+Everything you described is solvable in Microsoft Power BI — but only if you separate responsibilities correctly.
+
+---
+
+# 🔷 First: Understand the Core Design Principle
+
+You must separate:
+
+1. **Layout control** (show/hide panels, resize visuals)
+2. **View state control** (Dense / Longest / Gap)
+3. **Data filtering** (Route slicer, table selection)
+
+If you mix these in the same bookmark (especially with Data checked), things break.
+
+---
+
+# ✅ PART 1 — Pop-Up Filter Panel (Without Breaking Map State)
+
+Your concern:
+
+> If I open/close filter panel, will it reset my selected view (Dense / Longest)?
+
+It WILL reset if you create the bookmark incorrectly.
+
+### Correct Way To Build Filter Panel Bookmark
+
+Create TWO bookmarks:
+
+### 1️⃣ Filter_Open
+
+* ✔ Display = ON
+* ❌ Data = OFF
+* Selected visuals = ON
+* Only select:
+
+  * Filter panel background
+  * Slicer visuals inside panel
+
+### 2️⃣ Filter_Close
+
+* Same settings as above.
+
+Important:
+
+> Data must be OFF.
+
+This ensures:
+
+* Opening/closing filter panel does NOT touch Dense/Longest/Gap state.
+* It only affects visibility.
+
+---
+
+# ✅ PART 2 — Three Buttons (Dense / Longest / Gap)
+
+These are **View State Bookmarks**.
+
+You need 3 bookmarks:
+
+* Dense_View
+* Longest_View
+* Gap_View
+
+For EACH of these:
+
+### Bookmark Settings:
+
+* ✔ Display = ON
+* ❌ Data = OFF
+* All visuals = ON
+
+Why Data OFF?
+
+Because these bookmarks are about:
+
+* Showing correct table
+* Resizing map
+* Changing layout
+
+NOT about changing route filters.
+
+---
+
+# 🔷 About Different Table Sizes & Map Resizing
+
+Yes — you can resize the map per bookmark.
+
+Bookmark will store:
+
+* Position
+* Size
+* Visibility
+
+So:
+
+Dense → small table → large map
+Longest → medium table → medium map
+Gap → tall table → smaller map
+
+Each bookmark stores its own layout.
+
+That part is completely fine.
+
+---
+
+# ✅ PART 3 — The “Map Becomes Blank” Problem (Important)
+
+You described:
+
+> Route slicer has Route 110 selected
+> Then I click a route in Top 10 table
+> Map becomes blank
+
+This is NOT a bookmark issue.
+
+This is a filter conflict:
+
+Route = 110
+AND
+Route = 220
+
+= empty result.
+
+### Solution (Professional Way)
+
+Go to:
+Format → Edit Interactions
+
+Select the Top 10 table →
+Turn OFF interaction with the Route slicer.
+
+OR
+
+Turn OFF slicer interaction with the Top 10 table.
+
+You must prevent double filtering on the same column.
+
+---
+
+# ✅ PART 4 — How To Create a “Default” or “Blank” State
+
+You absolutely should create a Default bookmark.
+
+Call it:
+
+Default_View
+
+Set:
+
+* All three Top 10 tables hidden
+* Map full width
+* No specific view active
+
+Bookmark settings:
+
+* ✔ Display ON
+* ❌ Data OFF
+
+Then create a button:
+Action → Bookmark → Default_View
+
+This becomes your reset layout button.
+
+---
+
+# 🔷 Very Important: DO NOT MIX Data + Display Unless Needed
+
+Here’s the architecture you should follow:
+
+| Bookmark Type                  | Data | Display | Purpose          |
+| ------------------------------ | ---- | ------- | ---------------- |
+| Filter Panel                   | OFF  | ON      | Show/Hide panel  |
+| View State (Dense/Longest/Gap) | OFF  | ON      | Layout switching |
+| Reset Filters (optional)       | ON   | ON      | Clear slicers    |
+
+Never mix filter logic into layout bookmarks.
+
+---
+
+# 🔷 How Everything Works Together
+
+Let’s simulate your desired behavior:
+
+1️⃣ User clicks Dense
+→ Dense table visible
+→ Map resized
+
+2️⃣ User opens filter panel
+→ Panel slides in
+→ Dense state remains intact
+
+3️⃣ User collapses filter panel
+→ Panel hides
+→ Dense state still intact
+
+4️⃣ User clicks Longest
+→ Table switches
+→ Map resizes
+
+5️⃣ User clicks Default
+→ Full map view
+
+This works perfectly if:
+
+* All layout bookmarks have Data OFF
+* Only a dedicated Reset bookmark has Data ON
+
+---
+
+# 🔷 Optional Advanced Improvement (Cleaner Design)
+
+Instead of 3 separate tables, you could:
+
+* Use ONE table
+* Use a measure that switches logic based on selected button
+* Use a disconnected selector table
+
+This avoids resizing complexity.
+
+But your current method is valid — just heavier.
+
+---
+
+# 🔷 Final Architecture Summary
+
+You need:
+
+* 2 bookmarks → Filter open/close
+* 3 bookmarks → Dense/Longest/Gap
+* 1 bookmark → Default layout
+* Edit Interactions → Fix route conflict
+
+Total: 6 bookmarks
+
+And:
+
+* Only layout bookmarks → Data OFF
+* Only reset bookmark → Data ON
+
+---
+
+If you want, I can now:
+
+* Draw the exact visual-layer structure you should use
+* Or explain the cleaner DAX-based approach (single table dynamic switching)
+
+Which direction do you want to go — UX-focused or modeling-focused?
+
+
+
+
+=================================
+
+Good question. The order matters — because bookmarks capture the **current page state**.
+If you build them in the wrong sequence, you will constantly overwrite states.
+
+Below is the **correct build sequence** for your architecture.
+
+---
+
+# ✅ OVERALL BUILD STRATEGY
+
+You will build in this order:
+
+1. **Finish all visuals first (no bookmarks yet)**
+2. Create the 3 View bookmarks (Dense / Longest / Gap)
+3. Create the Default layout bookmark
+4. Build the Filter panel visuals
+5. Create Filter Open/Close bookmarks
+6. Fix visual interactions
+7. Test navigation logic
+
+Never create bookmarks while the layout is still changing.
+
+---
+
+# 🔷 STEP-BY-STEP SEQUENCE
+
+---
+
+## 🔹 STEP 1 — Build Base Layout (No Bookmarks Yet)
+
+Create:
+
+* Map visual
+* Dense table
+* Longest table
+* Gap table
+* Filter panel (but keep it hidden for now)
+
+Position everything exactly how you want it to appear in each state.
+
+Do NOT create bookmarks yet.
+
+---
+
+## 🔹 STEP 2 — Create the DEFAULT Layout First
+
+Set page to:
+
+* Map full size
+* All three Top 10 tables hidden
+* Filter panel hidden
+
+Now create bookmark:
+
+**Bookmark Name:** `Default_View`
+Settings:
+
+* ✔ Display ON
+* ❌ Data OFF
+* All visuals
+
+This becomes your safe baseline.
+
+Always build baseline first.
+
+---
+
+## 🔹 STEP 3 — Create Dense View Bookmark
+
+Now:
+
+1. Show Dense table
+2. Resize map accordingly
+3. Hide Longest & Gap tables
+4. Keep filter panel hidden
+
+Create bookmark:
+
+**Dense_View**
+
+* ✔ Display ON
+* ❌ Data OFF
+* All visuals
+
+Update it after creation.
+
+---
+
+## 🔹 STEP 4 — Create Longest View Bookmark
+
+Repeat:
+
+* Show Longest table
+* Resize map accordingly
+* Hide others
+* Filter panel hidden
+
+Create:
+
+**Longest_View**
+
+* ✔ Display ON
+* ❌ Data OFF
+
+Update it.
+
+---
+
+## 🔹 STEP 5 — Create Gap View Bookmark
+
+Same process.
+
+Create:
+
+**Gap_View**
+
+* ✔ Display ON
+* ❌ Data OFF
+
+Update it.
+
+---
+
+At this point your layout switching system is complete.
+
+Now test:
+Dense → Longest → Gap → Default
+Everything should resize properly.
+
+If this works, move forward.
+
+---
+
+## 🔹 STEP 6 — Build Filter Panel Structure
+
+Now focus on filter system.
+
+1. Position filter panel on left.
+2. Include:
+
+   * Background shape
+   * Slicers
+   * Close button
+3. Use Selection Pane → Hide entire filter panel group.
+
+Group everything:
+`Filter_Panel_Group`
+
+Grouping is critical.
+
+---
+
+## 🔹 STEP 7 — Create Filter Open Bookmark
+
+1. Make Filter_Panel_Group visible
+2. Do NOT change any tables or map
+3. Ensure current view is Default (important)
+
+Create:
+
+**Filter_Open**
+
+* ✔ Display ON
+* ❌ Data OFF
+* Selected visuals ONLY
+* Select only Filter_Panel_Group
+
+Update it.
+
+---
+
+## 🔹 STEP 8 — Create Filter Close Bookmark
+
+1. Hide Filter_Panel_Group
+2. Do not touch anything else
+
+Create:
+
+**Filter_Close**
+
+* ✔ Display ON
+* ❌ Data OFF
+* Selected visuals ONLY
+* Only Filter_Panel_Group selected
+
+Update it.
+
+---
+
+# 🔷 Why We Created View Bookmarks First
+
+Because:
+
+Filter bookmarks must not capture:
+
+* Table visibility
+* Map resizing
+
+If you build filter bookmarks first and then modify layout later, you will overwrite layout states accidentally.
+
+Layout first.
+Panel later.
+
+---
+
+# 🔷 STEP 9 — Fix the Route Conflict Problem
+
+Go to:
+Format → Edit Interactions
+
+Check:
+
+* Route slicer vs Top 10 tables
+* Top 10 tables vs Route slicer
+
+Prevent double filtering.
+
+This is separate from bookmarks.
+
+---
+
+# 🔷 STEP 10 — Add Button Actions
+
+Now connect buttons:
+
+Dense Button → Bookmark → Dense_View
+Longest Button → Bookmark → Longest_View
+Gap Button → Bookmark → Gap_View
+Reset Button → Bookmark → Default_View
+Filter Icon → Bookmark → Filter_Open
+Filter Close Button → Bookmark → Filter_Close
+
+Do NOT use Back for this design.
+
+---
+
+# 🔷 Final Testing Sequence
+
+Test like this:
+
+1. Click Dense
+2. Open Filter
+3. Close Filter
+4. Click Longest
+5. Open Filter
+6. Change slicer
+7. Close Filter
+8. Click Default
+
+If layout never resets unexpectedly → you built it correctly.
+
+---
+
+# 🔷 Professional Advice
+
+Always follow this hierarchy:
+
+Layout bookmarks
+↓
+Panel bookmarks
+↓
+Navigation actions
+↓
+Interaction tuning
+
+Never mix them.
+
+---
+
+If you want next-level stability, I can also show you how to:
+
+* Lock filter panel so it doesn’t overlap map interaction
+* Prevent users from breaking view state
+* Build a fully scalable bookmark architecture
+
+Just tell me.
