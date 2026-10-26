@@ -1,4 +1,4 @@
-# BMTC Transit Network Accessibility & Service Gap Analysis
+# 🚌 BMTC Transit Network Accessibility & Service Gap Analysis
 
 An exploratory geospatial analytics and Power BI project that examines how recorded BMTC route/stop service indicators compare with the population living around bus stops in Bengaluru. The project combines stop locations, route geometries, and the GHSL population grid to highlight locations and routes that may deserve closer investigation.
 
